@@ -80,8 +80,8 @@ class CSerialPort
 		int                 m_nComArray[SERIAL_PORT_MAX + 1];
 
 		static DWORD WINAPI CommThread( LPVOID pParam );
-		static void         ReceiveChar( CSerialPort *pPort );
-		static DWORD        WriteChar( CSerialPort *pPort );
+		static BOOL         ReceiveChar( CSerialPort *pPort );
+		static UINT         WriteChar( CSerialPort *pPort );
 		void                ProcessErrorMessage( char *ErrorText );
 		BOOL                QueryRegistry( HKEY hKey );
 };

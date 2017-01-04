@@ -35,7 +35,7 @@ CSerialPort::CSerialPort()
 
 CSerialPort::~CSerialPort()
 {
-	if ( IsOpen() )
+	if ( m_hComm != INVALID_HANDLE_VALUE )
 	{
 		Close();
 	}
@@ -69,7 +69,7 @@ BOOL CSerialPort::Open( HWND    pPortOwner,      // the owner (CWnd) of the port
 	GetWindowText( m_pOwner, ( LPSTR )m_szTitle, sizeof( m_szTitle ) );
 
 	// Close port if already opened
-	if ( IsOpen() )
+	if ( m_hComm != INVALID_HANDLE_VALUE )
 	{
 		Close();
 	}
@@ -329,11 +329,7 @@ DWORD WINAPI CSerialPort::CommThread( LPVOID pParam )
 		{
 			case EVENT_SHUTDOWN:
 				{
-					// Shutdown event.  This is event zero so it will be
-					// the higest priority and be serviced first.
-					pPort->m_bThreadAlive = FALSE;
-					::ExitThread( 0 );
-					break;
+					goto done; //break;
 				}
 
 			case EVENT_READ:
@@ -342,7 +338,10 @@ DWORD WINAPI CSerialPort::CommThread( LPVOID pParam )
 
 					if ( CommEvent & EV_RXCHAR )
 					{
-						ReceiveChar( pPort );
+						if ( !ReceiveChar(pPort) )
+						{
+							goto done; //break;
+						}
 					}
 
 					if ( CommEvent & ( EV_CTS | EV_DSR | EV_RLSD | EV_RXFLAG | EV_BREAK | EV_ERR | EV_RING ) )
@@ -355,8 +354,17 @@ DWORD WINAPI CSerialPort::CommThread( LPVOID pParam )
 
 			case EVENT_WRITE:
 				{
-					DWORD BytesSent = WriteChar( pPort );
-					::PostMessage( pPort->m_pOwner, SERIAL_PORT_MESSAGE, ( WPARAM ) BytesSent, ( LPARAM )  EV_TXEMPTY  );
+					UINT BytesSent = WriteChar( pPort );
+
+					if (EOF != BytesSent)
+					{
+						::PostMessage( pPort->m_pOwner, SERIAL_PORT_MESSAGE, ( WPARAM ) BytesSent, ( LPARAM )  EV_TXEMPTY  );
+					}
+					else
+					{
+						goto done; //break;
+					}
+
 					break;
 				}
 
@@ -368,6 +376,10 @@ DWORD WINAPI CSerialPort::CommThread( LPVOID pParam )
 		}
 	}
 
+done:
+	pPort->m_bThreadAlive = FALSE;
+	pPort->Close();
+	::ExitThread(0);
 	return 0;
 }
 
@@ -403,7 +415,7 @@ void CSerialPort::ProcessErrorMessage( char *ErrorText )
 	}
 }
 
-DWORD CSerialPort::WriteChar( CSerialPort *pPort )
+UINT CSerialPort::WriteChar( CSerialPort *pPort )
 {
 	BOOL bWrite = TRUE;
 	BOOL bResult = TRUE;
@@ -428,6 +440,13 @@ DWORD CSerialPort::WriteChar( CSerialPort *pPort )
 				{
 					bWrite = FALSE;
 					break;
+				}
+
+			case ERROR_ACCESS_DENIED:
+				{
+					LeaveCriticalSection(&pPort->m_csCommunicationSync);
+					pPort->ProcessErrorMessage("WriteFile()");
+					return EOF; //break;
 				}
 
 			default:
@@ -460,10 +479,10 @@ DWORD CSerialPort::WriteChar( CSerialPort *pPort )
 	assert ( (BytesSentA + BytesSentB) == pPort->m_nWriteSize );
 	pPort->m_nWriteSize = 0;
 	LeaveCriticalSection( &pPort->m_csCommunicationSync );
-	return (BytesSentA + BytesSentB);
+	return ((UINT)BytesSentA + (UINT)BytesSentB);
 }
 
-void CSerialPort::ReceiveChar( CSerialPort *pPort )
+BOOL CSerialPort::ReceiveChar( CSerialPort *pPort )
 {
 	BOOL  bResult = TRUE;
 	DWORD dwError = 0;
@@ -522,6 +541,13 @@ void CSerialPort::ReceiveChar( CSerialPort *pPort )
 						break;
 					}
 
+				case ERROR_ACCESS_DENIED:
+					{
+						LeaveCriticalSection(&pPort->m_csCommunicationSync);
+						pPort->ProcessErrorMessage("ReadFile()");
+						return FALSE; //break;
+					}
+
 				default:
 					{
 						pPort->ProcessErrorMessage( "ReadFile()" );
@@ -550,6 +576,8 @@ void CSerialPort::ReceiveChar( CSerialPort *pPort )
 			::PostMessage( pPort->m_pOwner, SERIAL_PORT_MESSAGE, ( WPARAM ) RXBuff, ( LPARAM )  EV_RXCHAR );
 		}
 	}
+
+	return TRUE;
 }
 
 DCB *CSerialPort::GetDCB()
@@ -597,6 +625,8 @@ void CSerialPort::Close()
 		while ( m_bThreadAlive );
 	}
 
+	EnterCriticalSection(&m_csCommunicationSync);
+
 	if ( m_hComm != INVALID_HANDLE_VALUE )
 	{
 		CloseHandle( m_hComm );
@@ -606,18 +636,21 @@ void CSerialPort::Close()
 	if ( m_hShutdownEvent != NULL )
 	{
 		ResetEvent( m_hShutdownEvent );
+		CloseHandle( m_hShutdownEvent );
 		m_hShutdownEvent = NULL;
 	}
 
 	if ( m_ov.hEvent != NULL )
 	{
 		ResetEvent( m_ov.hEvent );
+		CloseHandle( m_ov.hEvent );
 		m_ov.hEvent = NULL;
 	}
 
 	if ( m_hWriteEvent != NULL )
 	{
 		ResetEvent( m_hWriteEvent );
+		CloseHandle( m_hWriteEvent );
 		m_hWriteEvent = NULL;
 	}
 
@@ -634,6 +667,8 @@ void CSerialPort::Close()
 		CloseHandle( m_Thread );
 		m_Thread = NULL;
 	}
+
+	LeaveCriticalSection(&m_csCommunicationSync);
 }
 
 void CSerialPort::Write( char *Buffer )
