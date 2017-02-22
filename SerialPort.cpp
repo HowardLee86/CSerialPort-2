@@ -208,8 +208,9 @@ BOOL CSerialPort::Open( HWND    pPortOwner,      // the owner (CWnd) of the port
 	}
 
 	assert( m_Thread == NULL );
+	m_Thread = ::CreateThread(NULL, 0, CommThread, this, 0, NULL);
 
-	if ( !( m_Thread = ::CreateThread ( NULL, 0, CommThread, this, 0, NULL ) ) )
+	if (m_Thread == NULL)
 	{
 		ProcessErrorMessage( "CreateThread()" );
 		ret = FALSE;
@@ -229,7 +230,6 @@ done:
 
 DWORD WINAPI CSerialPort::CommThread( LPVOID pParam )
 {
-	DWORD BytesTransfered = 0;
 	DWORD Event = 0;
 	DWORD CommEvent = 0;
 	DWORD dwError = 0;
@@ -380,7 +380,7 @@ done:
 	pPort->m_bThreadAlive = FALSE;
 	pPort->Close();
 	::ExitThread(0);
-	return 0;
+	//return 0;
 }
 
 void CSerialPort::ProcessErrorMessage( char *ErrorText )
@@ -446,7 +446,7 @@ UINT CSerialPort::WriteChar( CSerialPort *pPort )
 				{
 					LeaveCriticalSection(&pPort->m_csCommunicationSync);
 					pPort->ProcessErrorMessage("WriteFile()");
-					return EOF; //break;
+					return (UINT)EOF; //break;
 				}
 
 			default:
@@ -476,7 +476,7 @@ UINT CSerialPort::WriteChar( CSerialPort *pPort )
 		FlushFileBuffers( pPort->m_hComm );
 	}
 
-	assert ( (BytesSentA + BytesSentB) == pPort->m_nWriteSize );
+	assert ( (BytesSentA + BytesSentB) == (DWORD)pPort->m_nWriteSize );
 	pPort->m_nWriteSize = 0;
 	LeaveCriticalSection( &pPort->m_csCommunicationSync );
 	return ((UINT)BytesSentA + (UINT)BytesSentB);
