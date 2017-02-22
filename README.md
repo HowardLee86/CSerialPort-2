@@ -3,7 +3,7 @@ CSerialPort
 
 ####CSerialPort updated version
 
-####Demo
+####Usage of this class 
 ####First step: 
      #include "SerialPort.h"
 
