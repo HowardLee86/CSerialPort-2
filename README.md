@@ -4,10 +4,10 @@ CSerialPort
 ####CSerialPort updated version
 
 ####Demo
-First step: 
+####First step: 
      #include "SerialPort.h"
 
-Second step:
+####Second step:
     CSerialPort port;
     port.Open( AfxGetApp()->m_pMainWnd->GetSafeHwnd(), 31 ); /* COM31 */
     port.GetDCB()->BaudRate = 9600;
@@ -15,10 +15,10 @@ Second step:
     port.Write( _T("Hello World!") );
     port.Close();
     
-Event report register:
+####Event report register:
     ON_REGISTERED_MESSAGE( SERIAL_PORT_MESSAGE, &CMyDlg::OnPortMsg )
 
-Event process:
+####Event process:
     LRESULT CMyDlg::OnPortMsg( WPARAM wParam, LPARAM lParam )
     {
 	      LPARAM
