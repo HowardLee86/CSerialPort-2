@@ -16,14 +16,14 @@ Orisinal author: Remon Spekreijse
     port.Write( _T("Hello World!") );
     port.Close();
     
-####Event report register:
+####How to deal with RX? register event report handler:
     ON_REGISTERED_MESSAGE( SERIAL_PORT_MESSAGE, &CMyDlg::OnPortMsg )
 
 ####Event process:
     LRESULT CMyDlg::OnPortMsg( WPARAM wParam, LPARAM lParam )
     {
 	      LPARAM
-		        EV_RXCHAR /* this event is receive, WPARAM is received char*/
+		        EV_RXCHAR /* this event type means received a char, WPARAM is received char*/
 		        EV_TXEMPTY
 		        EV_CTS
 		        EV_DSR
