@@ -22,7 +22,7 @@ CSerialPort
     port.Close();
 ```
 
-#### How to deal with RX? register event report handler:
+#### How to deal with RX? register event handler:
 ```html
     ON_REGISTERED_MESSAGE( SERIAL_PORT_MESSAGE, &CMyDlg::OnPortMsg )
 ```
@@ -32,7 +32,7 @@ CSerialPort
     LRESULT CMyDlg::OnPortMsg( WPARAM wParam, LPARAM lParam )
     {
 	      LPARAM
-		        EV_RXCHAR /* this event type means received a char, WPARAM is received char*/
+		        EV_RXCHAR /* this event type means received a char, WPARAM is the received char*/
 		        EV_TXEMPTY
 		        EV_CTS
 		        EV_DSR
