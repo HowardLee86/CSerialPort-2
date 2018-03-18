@@ -13,8 +13,10 @@ CSerialPort
 #### Second step:
 ```html
     CSerialPort port;
+    DCB *dcb;
     port.Open( AfxGetApp()->m_pMainWnd->GetSafeHwnd(), 31 ); /* COM31 */
-    port.GetDCB()->BaudRate = 9600;
+    dcb = port.GetDCB();
+    dcb->BaudRate = 9600;
     port.SetDCB(dcb);
     port.Write( _T("Hello World!") );
     port.Close();
