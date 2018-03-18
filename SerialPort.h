@@ -7,7 +7,7 @@
 **                      program is not blocked.
 **
 **  CREATION DATE       15-09-1997
-**  LAST MODIFICATION   12-30-2016
+**  LAST MODIFICATION   18-03-2018
 **
 **  AUTHOR              Remon Spekreijse
 */
