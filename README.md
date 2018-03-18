@@ -24,7 +24,7 @@ CSerialPort
 
 #### How to deal with RX? register event report handler:
 ```html
-    ON_REGISTERED_MESSAGE( SERIAL_PORT_MESSAGE, & CMyDlg::OnPortMsg )
+    ON_REGISTERED_MESSAGE( SERIAL_PORT_MESSAGE, &CMyDlg::OnPortMsg )
 ```
 
 #### Event process:
