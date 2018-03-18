@@ -1,7 +1,7 @@
 CSerialPort
 ===========
 
-#### CSerialPort updated version
+CSerialPort updated version
 Original author: Remon Spekreijse
 
 #### Usage of this class 
@@ -22,7 +22,7 @@ Original author: Remon Spekreijse
 
 #### How to deal with RX? register event report handler:
 ```html
-    ON_REGISTERED_MESSAGE( SERIAL_PORT_MESSAGE, &amp;CMyDlg::OnPortMsg )
+    ON_REGISTERED_MESSAGE( SERIAL_PORT_MESSAGE, & CMyDlg::OnPortMsg )
 ```
 
 #### Event process:
