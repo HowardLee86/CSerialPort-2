@@ -1,8 +1,8 @@
 CSerialPort
 ===========
 
-CSerialPort updated version
-Original author: Remon Spekreijse
+- CSerialPort updated version
+- Original author: Remon Spekreijse
 
 #### Usage of this class 
 #### First step:
